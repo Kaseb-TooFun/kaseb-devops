@@ -1,0 +1,75 @@
+gitlab-runner:
+  image: gitlab/gitlab-runner:latest
+  container_name: gitlab-runner
+  # ports:
+  #   - 8093:8093
+  volumes:
+    - /data/gitlab-runner/config:/etc/gitlab-runner
+    - /var/run/docker.sock:/var/run/docker.sock
+  restart: always
+
+squid:
+  image: sameersbn/squid:3.5.27-2
+  container_name: squid
+  ports:
+    - "3128:3128"
+  volumes:
+    - /data/squid:/var/spool/squid
+    - /data/squid/conf:/etc/squid/squid.conf:ro
+    - /data/squid/squid_users:/etc/squid/squid_users:ro
+    # - /data/squid/acl.url.nobump:/etc/squid/acl.url.nobump:ro
+  restart: always
+
+db:
+  image: postgres
+  restart: unless-stopped
+  container_name: db
+  ports:
+    - 5432:5432
+  env_file:
+    - env
+  volumes:
+    - /data/db:/var/lib/postgresql/data
+
+pgadmin:
+  container_name: pgadmin
+  image: dpage/pgadmin4
+  restart: unless-stopped
+  ports:
+    - 5431:80
+  volumes:
+    - /data/pgadmin:/var/lib/pgadmin
+  env_file:
+    - env
+  links:
+    - db:db
+
+pgbackups3:
+  image: amirabbas/postgres-backup-s3
+  container_name: pgbackups3
+  env_file:
+    - env
+  links:
+    - db:db
+
+proxy:
+  image: linuxserver/letsencrypt
+  container_name: proxy
+  cap_add:
+    - NET_ADMIN
+  environment:
+    - PUID=1000
+    - PGID=1000
+    - TZ=Europe/London
+    - URL=amirabbas.me
+    - SUBDOMAINS=pgadmin
+    - ONLY_SUBDOMAINS=true
+    - VALIDATION=http
+  volumes:
+    - /data/proxy:/config
+  ports:
+    - 443:443
+    - 80:80 #optional
+  restart: unless-stopped
+  links:
+    - pgadmin:pgadmin

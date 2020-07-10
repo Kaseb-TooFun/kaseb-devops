@@ -1,0 +1,32 @@
+- hosts: all
+  become: true
+
+  tasks:
+    - name: copy env file to server
+      copy:
+        src: ./env
+        dest: /env
+    - name: copy docker-compose to server
+      copy:
+        src: ./docker-compose.yml
+        dest: /docker-compose.yml
+
+    - name: copy squid conf to server
+      copy:
+        src: ./squid-conf
+        dest: /data/squid/conf
+
+    - name: copy squid user to server
+      copy:
+        src: ./squid_users
+        dest: /data/squid/squid_users
+
+    - name: copy nginxconf to server
+      copy:
+        src: ./default
+        dest: /data/proxy/nginx/site-confs/
+
+    - name: run docker-compose
+      docker_compose:
+        project_src: /
+        pull: yes
