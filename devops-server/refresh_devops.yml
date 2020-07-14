@@ -4,29 +4,35 @@
   tasks:
     - name: copy env file to server
       copy:
-        src: ./env
-        dest: /env
+        src: ./secret-env
+        dest: /secret-env
     - name: copy docker-compose to server
       copy:
         src: ./docker-compose.yml
         dest: /docker-compose.yml
+      tags:
+        - compose
 
     - name: copy squid conf to server
       copy:
-        src: ./squid-conf
+        src: ./squid/squid-conf
         dest: /data/squid/conf
 
     - name: copy squid user to server
       copy:
-        src: ./squid_users
+        src: ./squid/squid_users
         dest: /data/squid/squid_users
 
     - name: copy nginxconf to server
       copy:
-        src: ./default
+        src: ./nginx/default
         dest: /data/proxy/nginx/site-confs/
 
     - name: run docker-compose
       docker_compose:
         project_src: /
-        pull: yes
+        pull: yes     
+      become: yes
+      become_method: sudo
+      tags:
+        - compose

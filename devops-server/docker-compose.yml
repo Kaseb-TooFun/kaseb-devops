@@ -1,75 +1,114 @@
-gitlab-runner:
-  image: gitlab/gitlab-runner:latest
-  container_name: gitlab-runner
-  # ports:
-  #   - 8093:8093
-  volumes:
-    - /data/gitlab-runner/config:/etc/gitlab-runner
-    - /var/run/docker.sock:/var/run/docker.sock
-  restart: always
+version: "3.8"
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    # ports:
+    #   - 8093:8093
+    volumes:
+      - /data/gitlab-runner/config:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
 
-squid:
-  image: sameersbn/squid:3.5.27-2
-  container_name: squid
-  ports:
-    - "3128:3128"
-  volumes:
-    - /data/squid:/var/spool/squid
-    - /data/squid/conf:/etc/squid/squid.conf:ro
-    - /data/squid/squid_users:/etc/squid/squid_users:ro
-    # - /data/squid/acl.url.nobump:/etc/squid/acl.url.nobump:ro
-  restart: always
+  squid:
+    image: sameersbn/squid:3.5.27-2
+    container_name: squid
+    ports:
+      - "3128:3128"
+    volumes:
+      - /data/squid:/var/spool/squid
+      - /data/squid/conf:/etc/squid/squid.conf:ro
+      - /data/squid/squid_users:/etc/squid/squid_users:ro
+    restart: always
 
-db:
-  image: postgres
-  restart: unless-stopped
-  container_name: db
-  ports:
-    - 5432:5432
-  env_file:
-    - env
-  volumes:
-    - /data/db:/var/lib/postgresql/data
+  db:
+    image: postgres:12.3
+    restart: unless-stopped
+    container_name: db
+    #  ports:
+    #    - 5432:5432
+    env_file:
+      - secret-env
+    volumes:
+      - /data/db:/var/lib/postgresql/data
+    networks:
+      - backend
 
-pgadmin:
-  container_name: pgadmin
-  image: dpage/pgadmin4
-  restart: unless-stopped
-  ports:
-    - 5431:80
-  volumes:
-    - /data/pgadmin:/var/lib/pgadmin
-  env_file:
-    - env
-  links:
-    - db:db
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    #  ports:
+    #    - 5431:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@kaseb.com
+    volumes:
+      - /data/pgadmin:/var/lib/pgadmin
+    env_file:
+      - secret-env
+    networks:
+      - backend
+    depends_on:
+      - db
 
-pgbackups3:
-  image: amirabbas/postgres-backup-s3
-  container_name: pgbackups3
-  env_file:
-    - env
-  links:
-    - db:db
+  pgbackups3:
+    image: amirabbas/postgres-backup-s3
+    container_name: pgbackups3
+    environment:
+      - SCHEDULE="@daily"
+      - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
+      - S3_BUCKET=pg-dev-backup
+      - S3_PREFIX=backup
+      - POSTGRES_HOST=db
+      - POSTGRES_DATABASE=kaseb
+      - POSTGRES_USER=admin
+      - POSTGRES_EXTRA_OPTS="--schema=public --blobs"
+    env_file:
+      - secret-env
+    networks:
+      - backend
+    depends_on:
+      - db
 
-proxy:
-  image: linuxserver/letsencrypt
-  container_name: proxy
-  cap_add:
-    - NET_ADMIN
-  environment:
-    - PUID=1000
-    - PGID=1000
-    - TZ=Europe/London
-    - URL=amirabbas.me
-    - SUBDOMAINS=pgadmin
-    - ONLY_SUBDOMAINS=true
-    - VALIDATION=http
-  volumes:
-    - /data/proxy:/config
-  ports:
-    - 443:443
-    - 80:80 #optional
-  restart: unless-stopped
-  links:
-    - pgadmin:pgadmin
+  proxy:
+    image: linuxserver/letsencrypt
+    container_name: proxy
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - URL=amirabbas.me
+      - SUBDOMAINS=pgadmin,dev-api
+      - ONLY_SUBDOMAINS=true
+      - VALIDATION=http
+    volumes:
+      - /data/proxy:/config
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
+    networks:
+      - backend
+    depends_on:
+      - pgadmin
+      - server
+
+  server:
+    image: registry.gitlab.com/toofun-group/kaseb-server
+    container_name: server
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/kaseb
+      - SPRING_DATASOURCE_USERNAME=kaseb
+    env_file:
+      - secret-env
+    # ports:
+    # - 1212:1212
+    networks:
+      - backend
+    depends_on:
+      - db
+
+networks:
+  backend:
