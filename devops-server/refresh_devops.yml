@@ -6,6 +6,9 @@
       copy:
         src: ./secret-env
         dest: /secret-env
+      tags:
+        - env
+
     - name: copy docker-compose to server
       copy:
         src: ./docker-compose.yml
@@ -17,22 +20,48 @@
       copy:
         src: ./squid/squid-conf
         dest: /data/squid/conf
+      tags:
+        - squid
 
     - name: copy squid user to server
       copy:
         src: ./squid/squid_users
         dest: /data/squid/squid_users
+      tags:
+        - squid
 
     - name: copy nginxconf to server
       copy:
         src: ./nginx/default
         dest: /data/proxy/nginx/site-confs/
+      tags:
+        - nginx
+
+    - name: copy prometheus to server
+      copy:
+        src: ./prometheus
+        dest: /data
+      tags:
+        - prom
+
+    - name: copy alertmanager to server
+      copy:
+        src: ./alertmanager
+        dest: /data
+      tags:
+        - alert
+
+    - name: copy grafana to server
+      copy:
+        src: ./grafana
+        dest: /data
+      tags:
+        - grafana
 
     - name: run docker-compose
       docker_compose:
         project_src: /
-        pull: yes     
-      become: yes
-      become_method: sudo
+        pull: yes
       tags:
         - compose
+        - up

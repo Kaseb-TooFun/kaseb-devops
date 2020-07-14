@@ -48,6 +48,7 @@ services:
       - secret-env
     networks:
       - backend
+      - publish
     depends_on:
       - db
 
@@ -80,7 +81,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=amirabbas.me
-      - SUBDOMAINS=pgadmin,dev-api
+      - SUBDOMAINS=pgadmin,dev-api,monitor
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -90,7 +91,7 @@ services:
       - 80:80 #optional
     restart: unless-stopped
     networks:
-      - backend
+      - publish
     depends_on:
       - pgadmin
       - server
@@ -107,8 +108,91 @@ services:
     # - 1212:1212
     networks:
       - backend
+      - publish
     depends_on:
       - db
 
+  prometheus:
+    image: prom/prometheus:v2.19.2
+    container_name: prometheus
+    user: "1000:1000"
+    volumes:
+      - /data/prometheus/config:/etc/prometheus/
+      - /data/prometheus/data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - 9090:9090
+    links:
+      - cadvisor:cadvisor
+      - alertmanager:alertmanager
+    depends_on:
+      - cadvisor
+    networks:
+      - monitor
+      - backend
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+    volumes:
+      - /data/alertmanager/:/etc/alertmanager/
+    command:
+      - "--config.file=/etc/alertmanager/config.yml"
+      - "--storage.path=/alertmanager"
+    networks:
+      - monitor
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.37.0
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    restart: unless-stopped
+    networks:
+      - monitor
+
+  grafana:
+    image: grafana/grafana:7.0.6
+    container_name: grafana
+    user: "1000:1000"
+    volumes:
+      - /data/grafana/data:/var/lib/grafana
+      - /data/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    env_file:
+      - secret-env
+    networks:
+      - monitor
+      - publish
+
+  nodeexporter:
+    image: prom/node-exporter:v1.0.1
+    container_name: nodeexporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - monitor
+
 networks:
+  publish:
   backend:
+  monitor:
