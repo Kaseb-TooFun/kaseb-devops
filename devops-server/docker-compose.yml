@@ -81,7 +81,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=amirabbas.me
-      - SUBDOMAINS=pgadmin,dev-api,monitor
+      - SUBDOMAINS=pgadmin,dev-api,monitor,dev
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -111,6 +111,16 @@ services:
       - publish
     depends_on:
       - db
+
+  client:
+    image: registry.gitlab.com/toofun-group/kaseb-web-client
+    container_name: client
+    env_file:
+      - secret-env
+    # ports:
+    #   - 8080:80
+    networks:
+      - publish
 
   prometheus:
     image: prom/prometheus:v2.19.2
@@ -191,7 +201,24 @@ services:
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       - monitor
-
+#  alertmanager-bot:
+#    image: metalmatze/alertmanager-bot:0.4.0
+#    environment:
+#      ALERTMANAGER_URL: http://alertmanager:9093
+#      BOLT_PATH: /data/bot.db
+#      LISTEN_ADDR: 0.0.0.0:8080
+#      STORE: bolt
+#      TELEGRAM_ADMIN: "884718693\n73619377"
+#      TELEGRAM_TOKEN: 950539427:AAEKB4TuzAZRzU9zMaJUa0MUzPOmai51uiM
+#      TEMPLATE_PATHS: /templates/default.tmpl
+#    ports:
+#      - 8282:8080
+#    networks:
+#      - back-tier
+#    depends_on:
+#      - alertmanager
+#    volumes:
+#    - ./srv/monitoring/alertmanager-bot:/data
 networks:
   publish:
   backend:
