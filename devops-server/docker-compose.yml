@@ -10,16 +10,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
 
-  squid:
-    image: sameersbn/squid:3.5.27-2
-    container_name: squid
-    ports:
-      - "3128:3128"
-    volumes:
-      - /data/squid:/var/spool/squid
-      - /data/squid/conf:/etc/squid/squid.conf:ro
-      - /data/squid/squid_users:/etc/squid/squid_users:ro
-    restart: always
+  # squid:
+  #   image: sameersbn/squid:3.5.27-2
+  #   container_name: squid
+  #   ports:
+  #     - 8228:3128
+  #   volumes:
+  #     - /data/squid:/var/spool/squid
+  #     - /data/squid/conf:/etc/squid/squid.conf:ro
+  #     - /data/squid/squid_users:/etc/squid/squid_users:ro
+  #   restart: always
 
   db:
     image: postgres:12.3
@@ -56,20 +56,22 @@ services:
     image: amirabbas/postgres-backup-s3
     container_name: pgbackups3
     environment:
-      - SCHEDULE="@daily"
+      - SCHEDULE=@daily
       - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
       - S3_BUCKET=pg-dev-backup
       - S3_PREFIX=backup
       - POSTGRES_HOST=db
       - POSTGRES_DATABASE=kaseb
       - POSTGRES_USER=admin
-      - POSTGRES_EXTRA_OPTS="--schema=public --blobs"
+      - POSTGRES_EXTRA_OPTS=--schema=public --blobs
     env_file:
       - secret-env
     networks:
       - backend
     depends_on:
       - db
+    labels:
+      dozzle: "show logs"
 
   proxy:
     image: linuxserver/letsencrypt
@@ -80,8 +82,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-      - URL=amirabbas.me
-      - SUBDOMAINS=pgadmin,dev-api,monitor,dev
+      - URL=mykaseb.ir
+      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -92,9 +94,17 @@ services:
     restart: unless-stopped
     networks:
       - publish
+    healthcheck:
+      test: curl --fail -s localhost || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
     depends_on:
       - pgadmin
       - server
+      - grafana
+      - client
+      - dozzle
 
   server:
     image: registry.gitlab.com/toofun-group/kaseb-server
@@ -106,11 +116,18 @@ services:
       - secret-env
     # ports:
     # - 1212:1212
+    healthcheck:
+      test: curl --fail -s http://localhost:1212/api/v1/verify || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
     networks:
       - backend
       - publish
     depends_on:
       - db
+    labels:
+      dozzle: "show logs"
 
   client:
     image: registry.gitlab.com/toofun-group/kaseb-web-client
@@ -121,6 +138,8 @@ services:
     #   - 8080:80
     networks:
       - publish
+    labels:
+      dozzle: "show logs"
 
   prometheus:
     image: prom/prometheus:v2.19.2
@@ -201,24 +220,37 @@ services:
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       - monitor
-#  alertmanager-bot:
-#    image: metalmatze/alertmanager-bot:0.4.0
-#    environment:
-#      ALERTMANAGER_URL: http://alertmanager:9093
-#      BOLT_PATH: /data/bot.db
-#      LISTEN_ADDR: 0.0.0.0:8080
-#      STORE: bolt
-#      TELEGRAM_ADMIN: "884718693\n73619377"
-#      TELEGRAM_TOKEN: 950539427:AAEKB4TuzAZRzU9zMaJUa0MUzPOmai51uiM
-#      TEMPLATE_PATHS: /templates/default.tmpl
-#    ports:
-#      - 8282:8080
-#    networks:
-#      - back-tier
-#    depends_on:
-#      - alertmanager
-#    volumes:
-#    - ./srv/monitoring/alertmanager-bot:/data
+  #  alertmanager-bot:
+  #    image: metalmatze/alertmanager-bot:0.4.0
+  #    environment:
+  #      ALERTMANAGER_URL: http://alertmanager:9093
+  #      BOLT_PATH: /data/bot.db
+  #      LISTEN_ADDR: 0.0.0.0:8080
+  #      STORE: bolt
+  #      TELEGRAM_ADMIN: "XXXXXX\XXXXXX"
+  #      TELEGRAM_TOKEN: XXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  #      TEMPLATE_PATHS: /templates/default.tmpl
+  #    ports:
+  #      - 8282:8080
+  #    networks:
+  #      - back-tier
+  #    depends_on:
+  #      - alertmanager
+  #    volumes:
+  #    - ./srv/monitoring/alertmanager-bot:/data
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    # ports:
+    #   - 9999:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOZZLE_FILTER=label=dozzle
+
+    networks:
+      - publish
+
 networks:
   publish:
   backend:

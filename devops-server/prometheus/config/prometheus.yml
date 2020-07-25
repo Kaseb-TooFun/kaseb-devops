@@ -34,9 +34,14 @@ scrape_configs:
       - targets: ["localhost:9090"]
 
   - job_name: "dev-server"
+    metrics_path: "/monitoring/prometheus"
     scrape_interval: 5s
+    basic_auth:
+      username: kaseb
+      password_file: password
     static_configs:
-      - targets: ["server:1212"]
+      - targets:
+          - "server:1212"
 
   - job_name: "nodeexporter"
     scrape_interval: 5s

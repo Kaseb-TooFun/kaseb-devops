@@ -12,7 +12,34 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name pgadmin.amirabbas.me;
+    server_name dev.mykaseb.ir;
+
+    include /config/nginx/ssl.conf;
+
+    client_max_body_size 0;
+
+    # enable for ldap auth, fill in ldap details in ldap.conf
+    #include /config/nginx/ldap.conf;
+    proxy_cache my_cache;
+    add_header X-Cache-Status $upstream_cache_status;
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 10240;
+    gzip_proxied expired no-cache no-store private auth;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
+    gzip_disable "MSIE [1-6]\.";
+    location / {
+        include /config/nginx/proxy.conf;
+        resolver 127.0.0.11 valid=30s;
+        proxy_pass http://client:80;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name pgadmin.mykaseb.ir;
 
     include /config/nginx/ssl.conf;
 
@@ -33,7 +60,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name dev-api.amirabbas.me;
+    server_name dev-api.mykaseb.ir;
 
     include /config/nginx/ssl.conf;
 
@@ -60,7 +87,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name monitor.amirabbas.me;
+    server_name monitor.mykaseb.ir;
 
     include /config/nginx/ssl.conf;
 
@@ -88,7 +115,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name dev.amirabbas.me;
+    server_name log.mykaseb.ir;
 
     include /config/nginx/ssl.conf;
 
@@ -108,8 +135,19 @@ server {
 
         include /config/nginx/proxy.conf;
         resolver 127.0.0.11 valid=30s;
-        proxy_pass http://client:80;
+        proxy_pass http://dozzle:8080;
     }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name vid.mykaseb.ir;
+
+    include /config/nginx/ssl.conf;
+
+    rewrite ^/(.*)$ https://iutbox.iut.ac.ir/index.php/s/DRRzMe6ZkR5orji permanent;
 }
 # enable proxy cache for auth
 #proxy_cache_path cache/ keys_zone=auth_cache:10m;
