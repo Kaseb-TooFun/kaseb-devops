@@ -52,6 +52,16 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ["cadvisor:8080"]
+
+  - job_name: "prod-nodeexporter"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["37.152.187.66:9100"]
+
+  - job_name: "prod-cadvisor"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["37.152.187.66:8080"]
   # - job_name: "pushgateway"
   #   scrape_interval: 10s
   #   honor_labels: true
