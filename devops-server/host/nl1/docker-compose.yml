@@ -207,6 +207,7 @@ services:
       - secret-env
     networks:
       - monitor
+      - backend
       - publish
 
   nodeexporter:
