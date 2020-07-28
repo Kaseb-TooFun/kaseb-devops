@@ -56,7 +56,7 @@ services:
     image: amirabbas/postgres-backup-s3
     container_name: pgbackups3
     environment:
-      - SCHEDULE=@daily
+      - SCHEDULE=@weekly
       - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
       - S3_BUCKET=pg-dev-backup
       - S3_PREFIX=backup

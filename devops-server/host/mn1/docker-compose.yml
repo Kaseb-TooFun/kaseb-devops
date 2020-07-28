@@ -49,6 +49,26 @@ services:
     networks:
       - mysql
 
+  mybackups3:
+    image: schickling/mysql-backup-s3
+    container_name: mybackups3
+    environment:
+      - SCHEDULE=@weekly
+      - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
+      - S3_BUCKET=wordpress-backup
+      - S3_PREFIX=backup
+      - MYSQLDUMP_DATABASE=wordpress
+      - MYSQL_USER=root
+      - MYSQL_HOST=mysql
+    env_file:
+      - secret-env
+    networks:
+      - mysql
+    depends_on:
+      - mysql
+    labels:
+      dozzle: "show logs"
+
 networks:
   postgres:
   mysql:
