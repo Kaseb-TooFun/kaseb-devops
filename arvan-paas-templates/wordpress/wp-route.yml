@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: v1
+metadata:
+  name: wordpress-svc
+spec:
+  host: www.mykaseb.ir
+  to:
+    kind: Service
+    name: wordpress-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http

@@ -1,0 +1,105 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:12.3
+    restart: unless-stopped
+    container_name: postgres
+    ports:
+      - 5432:5432
+    env_file:
+      - secret-env
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+    networks:
+      - postgres
+
+  pgbackups3:
+    image: amirabbas/postgres-backup-s3
+    container_name: pgbackups3
+    environment:
+      - SCHEDULE=@daily
+      - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
+      - S3_BUCKET=pg-prod-backup
+      - S3_PREFIX=backup
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DATABASE=kaseb
+      - POSTGRES_USER=admin
+      - POSTGRES_EXTRA_OPTS=--schema=public --blobs
+    env_file:
+      - secret-env
+    networks:
+      - postgres
+    depends_on:
+      - postgres
+    labels:
+      dozzle: "show logs"
+
+  mysql:
+    image: mysql:5.7
+    restart: unless-stopped
+    container_name: mysql
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=wordpress
+    env_file:
+      - secret-env
+    volumes:
+      - /data/mysql:/var/lib/mysql
+    networks:
+      - mysql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - mysql
+      - postgres
+  # proxy:
+  #   image: linuxserver/letsencrypt
+  #   container_name: proxy
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/London
+  #     - URL=mykaseb.ir
+  #     - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid
+  #     - ONLY_SUBDOMAINS=true
+  #     - VALIDATION=http
+  #   volumes:
+  #     - /data/proxy:/config
+  #   ports:
+  #     - 443:443
+  #     - 80:80 #optional
+  #   restart: unless-stopped
+  #   networks:
+  #     - publish
+  #   healthcheck:
+  #     test: curl --fail -s localhost || exit 1
+  #     interval: 1m30s
+  #     timeout: 10s
+  #     retries: 3
+  #   depends_on:
+  #     - pgadmin
+  #     - dozzle
+  # dozzle:
+  #   container_name: dozzle
+  #   image: amir20/dozzle:latest
+  #   ports:
+  #     - 9999:8080
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   environment:
+  #     - DOZZLE_FILTER=label=dozzle
+  #   networks:
+  #     - publish
+
+networks:
+  # publish:
+  postgres:
+  mysql:
+  # monitor:

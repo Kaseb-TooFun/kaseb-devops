@@ -10,16 +10,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
 
-  # squid:
-  #   image: sameersbn/squid:3.5.27-2
-  #   container_name: squid
-  #   ports:
-  #     - 8228:3128
-  #   volumes:
-  #     - /data/squid:/var/spool/squid
-  #     - /data/squid/conf:/etc/squid/squid.conf:ro
-  #     - /data/squid/squid_users:/etc/squid/squid_users:ro
-  #   restart: always
+  squid:
+    image: sameersbn/squid:3.5.27-2
+    container_name: squid
+    ports:
+      - 8228:3128
+    volumes:
+      - /data/squid:/var/spool/squid
+      - /data/squid/conf:/etc/squid/squid.conf:ro
+      - /data/squid/squid_users:/etc/squid/squid_users:ro
+    restart: always
 
   db:
     image: postgres:12.3
@@ -132,6 +132,8 @@ services:
   client:
     image: registry.gitlab.com/toofun-group/kaseb-web-client
     container_name: client
+    environment:
+      - PUBLIC_URL=https://dev.mykaseb.ir
     env_file:
       - secret-env
     # ports:

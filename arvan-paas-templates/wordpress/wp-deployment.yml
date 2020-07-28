@@ -1,0 +1,60 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+        - resources:
+            limits:
+              cpu: 500m
+              ephemeral-storage: 200M
+              memory: 500M
+            requests:
+              cpu: 500m
+              ephemeral-storage: 200M
+              memory: 500M
+          terminationMessagePath: /dev/termination-log
+          name: wordpress
+          env:
+            - name: WORDPRESS_DB_HOST
+              value: wordpress-mysql-svc
+            - name: WORDPRESS_DB_USER
+              value: root
+            - name: WORDPRESS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: WORDPRESS_DB_PASSWORD
+                  name: db-secret
+            - name: WORDPRESS_DB_NAME
+              value: wordpress
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: wordpress-vol
+              mountPath: /var/www/html
+          terminationMessagePolicy: File
+          image: "wordpress:5.4.2"
+      volumes:
+        - name: wordpress-vol
+          persistentVolumeClaim:
+            claimName: wordpress-vol
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

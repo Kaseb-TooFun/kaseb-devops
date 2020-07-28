@@ -1,0 +1,25 @@
+- hosts: mn1
+  become: true
+
+  tasks:
+    - name: copy env file to server
+      copy:
+        src: secret-env
+        dest: /secret-env
+      tags:
+        - env
+
+    - name: copy docker-compose to server
+      copy:
+        src: docker-compose.yml
+        dest: /docker-compose.yml
+      tags:
+        - compose
+
+    - name: run docker-compose
+      docker_compose:
+        project_src: /
+        pull: yes
+      tags:
+        - compose
+        - up

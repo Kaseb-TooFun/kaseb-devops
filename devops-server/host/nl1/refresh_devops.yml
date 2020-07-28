@@ -1,59 +1,59 @@
-- hosts: all
+- hosts: nl1
   become: true
 
   tasks:
     - name: copy env file to server
       copy:
-        src: ./secret-env
+        src: secret-env
         dest: /secret-env
       tags:
         - env
 
     - name: copy docker-compose to server
       copy:
-        src: ./docker-compose.yml
+        src: docker-compose.yml
         dest: /docker-compose.yml
       tags:
         - compose
 
     - name: copy squid conf to server
       copy:
-        src: ./squid/squid-conf
+        src: squid/squid-conf
         dest: /data/squid/conf
       tags:
         - squid
 
     - name: copy squid user to server
       copy:
-        src: ./squid/squid_users
+        src: squid/squid_users
         dest: /data/squid/squid_users
       tags:
         - squid
 
     - name: copy nginxconf to server
       copy:
-        src: ./nginx/default
+        src: nginx/default
         dest: /data/proxy/nginx/site-confs/
       tags:
         - nginx
 
     - name: copy prometheus to server
       copy:
-        src: ./prometheus
+        src: prometheus
         dest: /data
       tags:
         - prom
 
     - name: copy alertmanager to server
       copy:
-        src: ./alertmanager
+        src: alertmanager
         dest: /data
       tags:
         - alert
 
     - name: copy grafana to server
       copy:
-        src: ./grafana
+        src: grafana
         dest: /data
       tags:
         - grafana
