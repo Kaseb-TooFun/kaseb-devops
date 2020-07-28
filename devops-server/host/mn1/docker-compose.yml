@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     container_name: postgres
     ports:
-      - 5432:5432
+      - 5436:5432
     env_file:
       - secret-env
     volumes:
@@ -49,57 +49,6 @@ services:
     networks:
       - mysql
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-    networks:
-      - mysql
-      - postgres
-  # proxy:
-  #   image: linuxserver/letsencrypt
-  #   container_name: proxy
-  #   cap_add:
-  #     - NET_ADMIN
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/London
-  #     - URL=mykaseb.ir
-  #     - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid
-  #     - ONLY_SUBDOMAINS=true
-  #     - VALIDATION=http
-  #   volumes:
-  #     - /data/proxy:/config
-  #   ports:
-  #     - 443:443
-  #     - 80:80 #optional
-  #   restart: unless-stopped
-  #   networks:
-  #     - publish
-  #   healthcheck:
-  #     test: curl --fail -s localhost || exit 1
-  #     interval: 1m30s
-  #     timeout: 10s
-  #     retries: 3
-  #   depends_on:
-  #     - pgadmin
-  #     - dozzle
-  # dozzle:
-  #   container_name: dozzle
-  #   image: amir20/dozzle:latest
-  #   ports:
-  #     - 9999:8080
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   environment:
-  #     - DOZZLE_FILTER=label=dozzle
-  #   networks:
-  #     - publish
-
 networks:
-  # publish:
   postgres:
   mysql:
-  # monitor:

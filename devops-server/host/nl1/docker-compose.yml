@@ -83,7 +83,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid
+      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid,adminer
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -249,7 +249,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DOZZLE_FILTER=label=dozzle
+    networks:
+      - publish
 
+  adminer:
+    container_name: adminer
+    image: adminer
+    restart: always
+    # ports:
+    #   - 8080:8080
     networks:
       - publish
 
