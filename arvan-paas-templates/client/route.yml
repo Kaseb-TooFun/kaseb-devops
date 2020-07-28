@@ -1,12 +1,12 @@
 kind: Route
 apiVersion: v1
 metadata:
-  name: wordpress-route
+  name: client-route
 spec:
-  host: www.mykaseb.ir
+  host: app.mykaseb.ir
   to:
     kind: Service
-    name: wordpress-svc
+    name: client-svc
     weight: 100
   tls:
     termination: edge
