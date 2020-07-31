@@ -33,6 +33,8 @@ services:
       - /data/db:/var/lib/postgresql/data
     networks:
       - backend
+    logging:
+      driver: fluentd
 
   pgadmin:
     container_name: pgadmin
@@ -70,8 +72,10 @@ services:
       - backend
     depends_on:
       - db
-    labels:
-      dozzle: "show logs"
+    logging:
+      driver: fluentd
+    # labels:
+    #   dozzle: "show logs"
 
   proxy:
     image: linuxserver/letsencrypt
@@ -104,8 +108,10 @@ services:
       - server
       - grafana
       - client
-      - dozzle
+      # - dozzle
       - kibana
+    logging:
+      driver: fluentd
 
   server:
     image: registry.gitlab.com/toofun-group/kaseb-server
@@ -117,6 +123,7 @@ services:
       - secret-env
     # ports:
     # - 1212:1212
+    restart: always
     healthcheck:
       test: curl --fail -s http://localhost:1212/api/v1/verify || exit 1
       interval: 1m30s
@@ -127,8 +134,10 @@ services:
       - publish
     depends_on:
       - db
-    labels:
-      dozzle: "show logs"
+    # labels:
+    #   dozzle: "show logs"
+    logging:
+      driver: fluentd
 
   client:
     image: registry.gitlab.com/toofun-group/kaseb-web-client
@@ -141,8 +150,10 @@ services:
     #   - 8080:80
     networks:
       - publish
-    labels:
-      dozzle: "show logs"
+    # labels:
+    #   dozzle: "show logs"
+    logging:
+      driver: fluentd
 
   prometheus:
     image: prom/prometheus:v2.19.2
@@ -242,17 +253,17 @@ services:
   #      - alertmanager
   #    volumes:
   #    - ./srv/monitoring/alertmanager-bot:/data
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle:latest
-    # ports:
-    #   - 9999:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - DOZZLE_FILTER=label=dozzle
-    networks:
-      - publish
+  # dozzle:
+  # container_name: dozzle
+  # image: amir20/dozzle:latest
+  # # ports:
+  # #   - 9999:8080
+  # volumes:
+  #   - /var/run/docker.sock:/var/run/docker.sock
+  # environment:
+  #   - DOZZLE_FILTER=label=dozzle
+  # networks:
+  #   - publish
 
   adminer:
     container_name: adminer
@@ -276,6 +287,15 @@ services:
       - secret-env
     networks:
       - publish
+
+  fluentbit:
+    container_name: fluentbit
+    image: fluent/fluent-bit:1.5
+    ports:
+      - "127.0.0.1:24224:24224"
+      - "127.0.0.1:24224:24224/udp"
+    volumes:
+      - /data/fluent/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
 
 networks:
   publish:

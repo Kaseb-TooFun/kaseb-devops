@@ -16,6 +16,13 @@
       tags:
         - compose
 
+    - name: copy fluent to server
+      copy:
+        src: fluent
+        dest: /data
+      tags:
+        - fluent
+
     - name: run docker-compose
       docker_compose:
         project_src: /

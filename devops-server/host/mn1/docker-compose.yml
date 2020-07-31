@@ -12,6 +12,8 @@ services:
       - /data/postgres:/var/lib/postgresql/data
     networks:
       - postgres
+    logging:
+      driver: fluentd
 
   pgbackups3:
     image: amirabbas/postgres-backup-s3
@@ -33,6 +35,8 @@ services:
       - postgres
     labels:
       dozzle: "show logs"
+    logging:
+      driver: fluentd
 
   mysql:
     image: mysql:5.7
@@ -48,6 +52,8 @@ services:
       - /data/mysql:/var/lib/mysql
     networks:
       - mysql
+    logging:
+      driver: fluentd
 
   mybackups3:
     image: schickling/mysql-backup-s3
@@ -68,6 +74,27 @@ services:
       - mysql
     labels:
       dozzle: "show logs"
+    logging:
+      driver: fluentd
+
+  mongo:
+    container_name: mongo
+    restart: always
+    image: mongo
+    command: --logappend --logpath=/tmp/mongod.log
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+    env_file:
+      - secret-env
+    # ports:
+    #   - 27017:27017
+    volumes:
+      #      - /data/mongo/logs:/logs
+      - /data/mongo/data/db:/data/db
+    networks:
+      - mongo
+    logging:
+      driver: fluentd
 
   elasticsearch:
     container_name: elasticsearch
@@ -78,10 +105,50 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=true
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+      - discovery.zen.ping.unicast.hosts=elasticsearch
     env_file:
       - secret-env
     volumes:
       - /data/elasticsearch:/usr/share/elasticsearch/data
+    networks:
+      - elasticsearch
+
+  harness:
+    container_name: harness
+    restart: always
+    image: actionml/harness:develop
+    ports:
+      - 9090:9090
+      # - 4040:4040
+    environment:
+      HARNESS_URI: http://0.0.0.0:9090
+      ELASTICSEARCH_URI: http://proxyelasticsearch:9200
+    env_file:
+      - secret-env
+    depends_on:
+      - mongo
+      - elasticsearch
+    # volumes:
+    #      - /data/harness/logs:/harness/logs
+    # - /data/harness-cli/data:/data
+    networks:
+      - proxyelasticsearch
+      - mongo
+    logging:
+      driver: fluentd
+
+  proxyelasticsearch:
+    container_name: proxyelasticsearch
+    restart: always
+    image: amirabbas/simple-reverse-proxy
+    env_file:
+      - secret-env
+    depends_on:
+      - elasticsearch
+    networks:
+      - elasticsearch
+      - proxyelasticsearch
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.37.0
@@ -111,6 +178,22 @@ services:
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
 
+  fluentbit:
+    container_name: fluentbit
+    image: fluent/fluent-bit:1.5
+    ports:
+      - "127.0.0.1:24224:24224"
+      - "127.0.0.1:24224:24224/udp"
+    volumes:
+      - /data/fluent/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    depends_on: 
+      - elasticsearch
+    networks:
+      - elasticsearch
+
 networks:
   postgres:
   mysql:
+  elasticsearch:
+  proxyelasticsearch:
+  mongo:

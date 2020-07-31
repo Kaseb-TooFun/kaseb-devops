@@ -35,17 +35,36 @@ spec:
                   key: SPRING_DATASOURCE_PASSWORD
                   name: pg-secret
           ports:
-            - containerPort: 80
+            - containerPort: 1212
               protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /api/v1/verify
+              port: 1212
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /api/v1/verify
+              port: 1212
+            initialDelaySeconds: 120
+            failureThreshold: 1
+            periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
           image: "registry.gitlab.com/toofun-group/kaseb-server"
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: private-reg
       securityContext: {}
       schedulerName: default-scheduler
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 1
   revisionHistoryLimit: 10
   progressDeadlineSeconds: 600
