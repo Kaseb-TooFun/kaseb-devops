@@ -68,7 +68,7 @@
     - name: run docker-compose
       docker_compose:
         project_src: /
-        pull: yes
+        pull: no
       tags:
         - compose
         - up

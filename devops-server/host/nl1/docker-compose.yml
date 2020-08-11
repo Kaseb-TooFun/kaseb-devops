@@ -87,7 +87,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,log,vid,adminer,kibana
+      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,vid,adminer,kibana
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -108,10 +108,7 @@ services:
       - server
       - grafana
       - client
-      # - dozzle
       - kibana
-    logging:
-      driver: fluentd
 
   server:
     image: registry.gitlab.com/toofun-group/kaseb-server
@@ -291,6 +288,8 @@ services:
   fluentbit:
     container_name: fluentbit
     image: fluent/fluent-bit:1.5
+    env_file:
+      - secret-env
     ports:
       - "127.0.0.1:24224:24224"
       - "127.0.0.1:24224:24224/udp"
