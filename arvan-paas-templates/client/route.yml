@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: client-route
 spec:
-  host: app.mykaseb.ir
+  host: app.kaseb.xyz
   to:
     kind: Service
     name: client-svc

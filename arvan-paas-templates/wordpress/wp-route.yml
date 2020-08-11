@@ -3,7 +3,7 @@ apiVersion: v1
 metadata:
   name: wordpress-route
 spec:
-  host: www.mykaseb.ir
+  host: www.kaseb.xyz
   to:
     kind: Service
     name: wordpress-svc

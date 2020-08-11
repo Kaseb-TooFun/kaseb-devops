@@ -26,9 +26,9 @@ spec:
           name: client
           env:
             - name: PUBLIC_URL
-              value: https://app.mykaseb.ir
+              value: https://app.kaseb.xyz
             - name: BASE_URL
-              value: https://api.mykaseb.ir
+              value: https://api.kaseb.xyz
           ports:
             - containerPort: 80
               protocol: TCP
