@@ -2,3 +2,4 @@ data/
 secret-env
 squid_users
 password
+__pycache__
