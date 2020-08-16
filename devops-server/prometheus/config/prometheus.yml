@@ -43,6 +43,16 @@ scrape_configs:
       - targets:
           - "server:1212"
 
+  - job_name: "prod-server"
+    metrics_path: "/monitoring/prometheus"
+    scrape_interval: 5s
+    basic_auth:
+      username: kaseb
+      password_file: password
+    static_configs:
+      - targets:
+          - "api.kaseb.xyz"
+
   - job_name: "nodeexporter"
     scrape_interval: 5s
     static_configs:
