@@ -41,7 +41,7 @@ spec:
             successThreshold: 1
           livenessProbe:
             httpGet:
-              path: /api/v1/verify
+              path: /
               port: 80
             initialDelaySeconds: 30
             failureThreshold: 1
