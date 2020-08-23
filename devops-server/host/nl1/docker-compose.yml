@@ -314,39 +314,7 @@ services:
     #   - 6379:6379
     networks:
       - eve
-  eve:
-    container_name: eve
-    restart: unless-stopped
-    image: registry.gitlab.com/hava.dev/eve:latest
-    #    ports:
-    #      - 5005:5005
-    volumes:
-      - /data/eve/models:/eve/models
-    networks:
-      - eve
 
-  eve-server:
-    container_name: eve-server
-    image: registry.gitlab.com/hava.dev/eve-server:latest
-    restart: unless-stopped
-    ports:
-      - 8000:8000
-    #      - 8002:8002
-    environment:
-      - DEBUG=False
-      - ATHENA_HOST=eve
-      - LETTER_HOST=harness
-      - DB_HOST=db
-      # - DB_PASS=
-      - REDIS_HOST=redis
-    env_file:
-      - secret-env
-    depends_on:
-      - db
-      - eve
-      - redis
-    networks:
-      - eve
 
 networks:
   publish:

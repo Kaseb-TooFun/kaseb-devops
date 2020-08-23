@@ -1,0 +1,30 @@
+{
+    "engineId": "kaseb",
+    "engineFactory": "com.actionml.engines.ur.UREngine",
+    "dataset": {
+        "ttl": "356 days"
+    },
+    "sparkConf": {
+        "master":"local",
+        "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
+        "spark.kryo.registrator": "org.apache.mahout.sparkbindings.io.MahoutKryoRegistrator",
+        "spark.kryo.referenceTracking": "false",
+        "spark.kryoserializer.buffer": "300m",
+        "spark.executor.memory": "3g",
+        "spark.driver.memory": "3g",
+        "spark.es.index.auto.create": "true",
+        "spark.es.nodes": "proxyelasticsearch",
+        "spark.es.nodes.wan.only": "true"
+    },
+    "algorithm":{
+        "indicators": [ 
+            {
+                "name": "goal"
+            },{
+                "name": "click"
+            },{
+                "name": "hover"
+            }
+        ]
+    }
+}

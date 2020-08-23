@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  harness-cli:
+    container_name: harness-cli
+    restart: always
+    image: actionml/harness-cli:develop
+    environment:
+      PATH: "$PATH:/harness-cli/harness-cli"
+      HARNESS_SERVER_ADDRESS: 37.152.187.66
+    volumes:
+      - .:/configs

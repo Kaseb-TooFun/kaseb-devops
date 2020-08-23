@@ -1,0 +1,95 @@
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/events \
+-H "Content-Type: application/json" \
+-d '{
+   "event" : "click",
+   "entityType" : "user",
+   "entityId" : "1",
+   "targetEntityType" : "item",
+   "targetEntityId" : "1",
+   "eventTime" : "2020-01-24T21:03:49Z"
+}'
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/events \
+-H "Content-Type: application/json" \
+-d '{
+   "event" : "goal",
+   "entityType" : "user",
+   "entityId" : "1",
+   "targetEntityType" : "item",
+   "targetEntityId" : "1",
+   "eventTime" : "2020-01-24T21:03:49Z"
+}'
+
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/events \
+-H "Content-Type: application/json" \
+-d '{
+   "event" : "$set",
+   "entityType" : "item",
+   "entityId" : "iPad",
+   "properties" : {
+      "category": ["electronics", "mobile"],
+      "expireDate": "2020-10-05T21:02:49.228Z"
+   },
+   "eventTime" : "2019-10-05T21:02:49.228Z"
+}'
+
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/events \
+-H "Content-Type: application/json" \
+-d' {
+   "event":"$set",
+   "entityType":"item",
+   "entityId":"Mr Robot",
+   "properties": {
+      "content-type":["tv show"],
+      "genres":["suspense","sci-fi", "drama"],
+      "actor":["Rami Malek", "Christian Slater"],
+      "keywords":["hacker"],
+      "first_aired":["2015"]
+   },
+   "eventTime" : "2016-10-05T21:02:49.228Z"
+}'
+
+
+
+
+
+///////////////////////////////
+
+
+
+
+
+
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/jobs \
+-H "Content-Type: application/json" \
+-d '{}'
+
+
+
+//////////////
+
+
+
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/queries \
+-H "Content-Type: application/json" \
+-d '{
+
+}'
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/queries \
+-H "Content-Type: application/json" \
+-d '{
+  "user": "2"
+}'
+
+
+
+curl -i -X POST http://37.152.187.66:9090/engines/kaseb/queries \
+-H "Content-Type: application/json" \
+-d '{
+  "user": "John hasan"
+}'
