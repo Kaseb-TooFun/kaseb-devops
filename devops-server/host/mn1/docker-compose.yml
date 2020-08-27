@@ -1,5 +1,34 @@
 version: "3.8"
 services:
+  nginx:
+    image: linuxserver/letsencrypt
+    container_name: nginx
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - VALIDATION=http
+      - URL=kaseb.xyz
+      - ONLY_SUBDOMAINS=true
+      - SUBDOMAINS=harness,cadvisor,node
+    volumes:
+      - /data/nginx:/config
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
+    networks:
+      - publish
+    healthcheck:
+      test: curl --fail -s localhost || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - harness
+
   postgres:
     image: postgres:12.3
     restart: unless-stopped
@@ -119,11 +148,12 @@ services:
     restart: always
     image: actionml/harness:develop
     # ports:
-      # - 9090:9090
-      # - 4040:4040
+    #   - 9090:9090
+    # - 4040:4040
     environment:
-      HARNESS_URI: http://0.0.0.0:9090
-      ELASTICSEARCH_URI: http://proxyelasticsearch:9200
+      - HARNESS_URI=http://0.0.0.0:9090
+      - ELASTICSEARCH_URI=http://proxyelasticsearch:9200
+      - HARNESS_AUTH_ENABLED=true
     env_file:
       - secret-env
     depends_on:
@@ -135,6 +165,7 @@ services:
     networks:
       - proxyelasticsearch
       - mongo
+      - publish
     logging:
       driver: fluentd
 
@@ -153,6 +184,7 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.37.0
     container_name: cadvisor
+    restart: unless-stopped
     ports:
       - 8080:8080
     volumes:
@@ -161,7 +193,8 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /cgroup:/cgroup:ro
-    restart: unless-stopped
+    networks:
+      - publish
 
   nodeexporter:
     image: prom/node-exporter:v1.0.1
@@ -177,6 +210,8 @@ services:
       - "--path.rootfs=/rootfs"
       - "--path.sysfs=/host/sys"
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - publish
 
   fluentbit:
     container_name: fluentbit
@@ -188,7 +223,7 @@ services:
       - "127.0.0.1:24224:24224/udp"
     volumes:
       - /data/fluent/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
-    depends_on: 
+    depends_on:
       - elasticsearch
     networks:
       - elasticsearch
@@ -199,3 +234,4 @@ networks:
   elasticsearch:
   proxyelasticsearch:
   mongo:
+  publish:

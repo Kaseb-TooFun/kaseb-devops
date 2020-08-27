@@ -16,6 +16,20 @@
       tags:
         - compose
 
+    - name: copy nginx config to server
+      copy:
+        src: nginx/default
+        dest: /data/nginx/nginx/site-confs/
+      tags:
+        - nginx
+
+    - name: copy nginx secret to server
+      copy:
+        src: nginx/htpasswd
+        dest: /data/nginx/
+      tags:
+        - nginx
+
     - name: copy fluent to server
       copy:
         src: fluent
