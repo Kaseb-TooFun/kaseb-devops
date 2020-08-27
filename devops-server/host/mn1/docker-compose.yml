@@ -185,8 +185,8 @@ services:
     image: gcr.io/cadvisor/cadvisor:v0.37.0
     container_name: cadvisor
     restart: unless-stopped
-    ports:
-      - 8080:8080
+    # ports:
+    #   - 8080:8080
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -199,8 +199,8 @@ services:
   nodeexporter:
     image: prom/node-exporter:v1.0.1
     container_name: nodeexporter
-    ports:
-      - 9100:9100
+    # ports:
+    #   - 9100:9100
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
