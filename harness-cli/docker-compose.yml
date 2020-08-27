@@ -3,7 +3,6 @@ version: "3"
 services:
   harness-cli:
     container_name: harness-cli
-    restart: always
     image: actionml/harness-cli:develop
     environment:
       PATH: "$PATH:/harness-cli/harness-cli"
