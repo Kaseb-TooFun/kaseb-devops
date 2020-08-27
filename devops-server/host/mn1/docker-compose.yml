@@ -153,7 +153,6 @@ services:
     environment:
       - HARNESS_URI=http://0.0.0.0:9090
       - ELASTICSEARCH_URI=http://proxyelasticsearch:9200
-      - HARNESS_AUTH_ENABLED=true
     env_file:
       - secret-env
     depends_on:
