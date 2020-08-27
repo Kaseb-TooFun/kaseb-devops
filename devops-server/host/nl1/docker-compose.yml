@@ -78,9 +78,9 @@ services:
     # labels:
     #   dozzle: "show logs"
 
-  proxy:
+  nginx:
     image: linuxserver/letsencrypt
-    container_name: proxy
+    container_name: nginx
     cap_add:
       - NET_ADMIN
     environment:
@@ -88,11 +88,12 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,vid,adminer,kibana
+      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,vid,adminer,kibana,prom
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
+      - EXTRA_DOMAINS=api.hava.dev
     volumes:
-      - /data/proxy:/config
+      - /data/nginx:/config
     ports:
       - 443:443
       - 80:80 #optional
@@ -110,6 +111,7 @@ services:
       - grafana
       - client
       - kibana
+      - prometheus
 
   server:
     image: registry.gitlab.com/toofun-group/kaseb-server
@@ -175,6 +177,7 @@ services:
     networks:
       - monitor
       - backend
+      - publish
 
   alertmanager:
     image: prom/alertmanager

@@ -16,7 +16,7 @@
       tags:
         - compose
 
-    - name: copy squid conf to server
+    - name: copy squid config to server
       copy:
         src: ../../squid/squid-conf
         dest: /data/squid/conf
@@ -30,16 +30,23 @@
       tags:
         - squid
 
-    - name: copy nginxconf to server
+    - name: copy nginx config to server
       copy:
-        src: ../../nginx/default
-        dest: /data/proxy/nginx/site-confs/
+        src: nginx/default
+        dest: /data/nginx/nginx/site-confs/
+      tags:
+        - nginx
+
+    - name: copy nginx secret to server
+      copy:
+        src: nginx/htpasswd
+        dest: /data/nginx/
       tags:
         - nginx
 
     - name: copy prometheus to server
       copy:
-        src: ../../prometheus
+        src: prometheus
         dest: /data
       tags:
         - prom

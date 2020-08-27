@@ -65,13 +65,19 @@ scrape_configs:
 
   - job_name: "prod-nodeexporter"
     scrape_interval: 5s
+    basic_auth:
+      username: kaseb
+      password_file: password-prod
     static_configs:
-      - targets: ["37.152.187.66:9100"]
+      - targets: ["node.kaseb.xyz"]
 
   - job_name: "prod-cadvisor"
     scrape_interval: 5s
+    basic_auth:
+      username: kaseb
+      password_file: password-prod
     static_configs:
-      - targets: ["37.152.187.66:8080"]
+      - targets: ["cadvisor.kaseb.xyz"]
   # - job_name: "pushgateway"
   #   scrape_interval: 10s
   #   honor_labels: true
