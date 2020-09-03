@@ -1,0 +1,54 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: rabbit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbit
+  template:
+    metadata:
+      labels:
+        app: rabbit
+    spec:
+      containers:
+        - resources:
+            limits:
+              cpu: 200m
+              ephemeral-storage: 100M
+              memory: 200M
+            requests:
+              cpu: 200m
+              ephemeral-storage: 100M
+              memory: 200M
+          terminationMessagePath: /dev/termination-log
+          name: rabbit
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: kaseb
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  key: RABBITMQ_DEFAULT_PASS
+                  name: rabbit-secret
+          ports:
+            - containerPort: 5672
+              protocol: TCP
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: rabbitmq:management
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: private-reg
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 1
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
