@@ -12,7 +12,7 @@ services:
       - VALIDATION=http
       - URL=kaseb.xyz
       - ONLY_SUBDOMAINS=true
-      - SUBDOMAINS=harness,cadvisor,node
+      - SUBDOMAINS=kibana,cadvisor,node
     volumes:
       - /data/nginx:/config
     ports:
@@ -27,7 +27,7 @@ services:
       timeout: 10s
       retries: 3
     depends_on:
-      - harness
+      - kibana
 
   postgres:
     image: postgres:12.3
@@ -62,8 +62,6 @@ services:
       - postgres
     depends_on:
       - postgres
-    labels:
-      dozzle: "show logs"
     logging:
       driver: fluentd
 
@@ -101,8 +99,6 @@ services:
       - mysql
     depends_on:
       - mysql
-    labels:
-      dozzle: "show logs"
     logging:
       driver: fluentd
 
@@ -110,15 +106,13 @@ services:
     container_name: mongo
     restart: always
     image: mongo
-    command: --logappend --logpath=/tmp/mongod.log
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
     env_file:
       - secret-env
-    # ports:
-    #   - 27017:27017
+    ports:
+      - 27017:27017
     volumes:
-      #      - /data/mongo/logs:/logs
       - /data/mongo/data/db:/data/db
     networks:
       - mongo
@@ -143,42 +137,18 @@ services:
     networks:
       - elasticsearch
 
-  harness:
-    container_name: harness
-    restart: always
-    image: actionml/harness:develop
-    # ports:
-    #   - 9090:9090
-    # - 4040:4040
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.8.1
     environment:
-      - HARNESS_URI=http://0.0.0.0:9090
-      - ELASTICSEARCH_URI=http://proxyelasticsearch:9200
+      SERVER_NAME: kibana.kaseb.xyz
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: elastic
     env_file:
       - secret-env
-    depends_on:
-      - mongo
-      - elasticsearch
-    # volumes:
-    #      - /data/harness/logs:/harness/logs
-    # - /data/harness-cli/data:/data
     networks:
-      - proxyelasticsearch
-      - mongo
+      - elasticsearch
       - publish
-    logging:
-      driver: fluentd
-
-  proxyelasticsearch:
-    container_name: proxyelasticsearch
-    restart: always
-    image: amirabbas/simple-reverse-proxy
-    env_file:
-      - secret-env
-    depends_on:
-      - elasticsearch
-    networks:
-      - elasticsearch
-      - proxyelasticsearch
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.37.0
@@ -231,6 +201,5 @@ networks:
   postgres:
   mysql:
   elasticsearch:
-  proxyelasticsearch:
   mongo:
   publish:

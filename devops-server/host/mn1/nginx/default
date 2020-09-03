@@ -12,7 +12,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
 
-    server_name harness.kaseb.xyz;
+    server_name kibana.kaseb.xyz;
 
     include /config/nginx/ssl.conf;
 
@@ -28,15 +28,11 @@ server {
     gzip_proxied expired no-cache no-store private auth;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml;
     gzip_disable "MSIE [1-6]\.";
-
-    auth_basic           "Administrator’s Area";
-    auth_basic_user_file /config/htpasswd;
-    
     location / {
 
         include /config/nginx/proxy.conf;
         resolver 127.0.0.11 valid=30s;
-        proxy_pass http://harness:9090;
+        proxy_pass http://kibana:5601;
     }
 }
 

@@ -10,16 +10,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
 
-  squid:
-    image: sameersbn/squid:3.5.27-2
-    container_name: squid
-    ports:
-      - 8228:3128
-    volumes:
-      - /data/squid:/var/spool/squid
-      - /data/squid/conf:/etc/squid/squid.conf:ro
-      - /data/squid/squid_users:/etc/squid/squid_users:ro
-    restart: always
+  # squid:
+  #   image: sameersbn/squid:3.5.27-2
+  #   container_name: squid
+  #   ports:
+  #     - 8228:3128
+  #   volumes:
+  #     - /data/squid:/var/spool/squid
+  #     - /data/squid/conf:/etc/squid/squid.conf:ro
+  #     - /data/squid/squid_users:/etc/squid/squid_users:ro
+  #   restart: always
 
   db:
     image: postgres:12.3
@@ -34,8 +34,6 @@ services:
     networks:
       - backend
       - eve
-    logging:
-      driver: fluentd
 
   pgadmin:
     container_name: pgadmin
@@ -73,10 +71,8 @@ services:
       - backend
     depends_on:
       - db
-    logging:
-      driver: fluentd
-    # labels:
-    #   dozzle: "show logs"
+    labels:
+      dozzle: "show logs"
 
   nginx:
     image: linuxserver/letsencrypt
@@ -88,7 +84,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=pgadmin,dev-api,monitor,dev,vid,adminer,kibana,prom
+      - SUBDOMAINS=pgadmin,api,monitor,app,log,adminer,harness,prom,track
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
       - EXTRA_DOMAINS=api.hava.dev
@@ -110,8 +106,9 @@ services:
       - server
       - grafana
       - client
-      - kibana
       - prometheus
+      - tracking-server
+      - harness
 
   server:
     image: registry.gitlab.com/toofun-group/kaseb-server
@@ -119,6 +116,7 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/kaseb
       - SPRING_DATASOURCE_USERNAME=kaseb
+      - SERVICES_INFRASTRUCTURE_HARNESS_BASE_URL=http://harness:9090
     env_file:
       - secret-env
     # ports:
@@ -134,26 +132,57 @@ services:
       - publish
     depends_on:
       - db
-    # labels:
-    #   dozzle: "show logs"
-    logging:
-      driver: fluentd
+    labels:
+      dozzle: "show logs"
+
+  tracking-server:
+    image: registry.gitlab.com/toofun-group/kaseb-tracking-server
+    container_name: tracking-server
+    environment:
+      - RABBITMQ_DEFAULT_USER=kaseb
+      - RABBITMQ_DEFAULT_PASS=pass
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=kaseb
+      - SPRING_RABBITMQ_PASSWORD=pass
+      - SERVICES_INFRASTRUCTURE_HARNESS_BASE_URL=http://harness:9090
+      - SERVICES_INFRASTRUCTURE_HARNESS_USERNAME=user
+      - SERVICES_INFRASTRUCTURE_HARNESS_PASSWORD=pass
+    env_file:
+      - secret-env
+    # ports:
+    # - 1313:1313
+    networks:
+      - publish
+      - rabbit
+    labels:
+      dozzle: "show logs"
 
   client:
     image: registry.gitlab.com/toofun-group/kaseb-web-client
     container_name: client
     environment:
-      - PUBLIC_URL=https://dev.mykaseb.ir
+      - PUBLIC_URL=https://app.mykaseb.ir
+      - BASE_URL=https://api.mykaseb.ir
     env_file:
       - secret-env
     # ports:
     #   - 8080:80
     networks:
       - publish
-    # labels:
-    #   dozzle: "show logs"
-    logging:
-      driver: fluentd
+    labels:
+      dozzle: "show logs"
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    # ports:
+    #   - "5672:5672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=kaseb
+      - RABBITMQ_DEFAULT_PASS=pass
+    networks:
+      - rabbit
 
   prometheus:
     image: prom/prometheus:v2.19.2
@@ -244,35 +273,17 @@ services:
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       - monitor
-  #  alertmanager-bot:
-  #    image: metalmatze/alertmanager-bot:0.4.0
-  #    environment:
-  #      ALERTMANAGER_URL: http://alertmanager:9093
-  #      BOLT_PATH: /data/bot.db
-  #      LISTEN_ADDR: 0.0.0.0:8080
-  #      STORE: bolt
-  #      TELEGRAM_ADMIN: "XXXXXX\XXXXXX"
-  #      TELEGRAM_TOKEN: XXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  #      TEMPLATE_PATHS: /templates/default.tmpl
-  #    ports:
-  #      - 8282:8080
-  #    networks:
-  #      - back-tier
-  #    depends_on:
-  #      - alertmanager
-  #    volumes:
-  #    - ./srv/monitoring/alertmanager-bot:/data
-  # dozzle:
-  # container_name: dozzle
-  # image: amir20/dozzle:latest
-  # # ports:
-  # #   - 9999:8080
-  # volumes:
-  #   - /var/run/docker.sock:/var/run/docker.sock
-  # environment:
-  #   - DOZZLE_FILTER=label=dozzle
-  # networks:
-  #   - publish
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    # ports:
+    #   - 9999:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DOZZLE_FILTER=label=dozzle
+    networks:
+      - publish
 
   adminer:
     container_name: adminer
@@ -283,30 +294,43 @@ services:
     networks:
       - publish
 
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.8.1
-    # ports:
-    #   - 5601:5601
-    environment:
-      SERVER_NAME: kibana.mykaseb.ir
-      ELASTICSEARCH_HOSTS: http://37.152.187.66:9200
-      ELASTICSEARCH_USERNAME: elastic
+  proxyelasticsearch:
+    container_name: proxyelasticsearch
+    restart: always
+    image: amirabbas/simple-reverse-proxy
     env_file:
       - secret-env
     networks:
-      - publish
+      - rabbit
 
-  fluentbit:
-    container_name: fluentbit
-    image: fluent/fluent-bit:1.5
-    env_file:
-      - secret-env
-    ports:
-      - "127.0.0.1:24224:24224"
-      - "127.0.0.1:24224:24224/udp"
+  harness:
+    container_name: harness
+    restart: always
+    image: actionml/harness:develop
+    # ports:
+    #   - 9090:9090
+    # - 4040:4040
+    environment:
+      - HARNESS_URI=http://0.0.0.0:9090
+      - ELASTICSEARCH_URI=http://proxyelasticsearch:9200
+      - MONGO_URI=mongodb://mongo:27017
+    depends_on:
+      - mongo
+    networks:
+      - publish
+      - rabbit
+    labels:
+      dozzle: "show logs"
+
+  mongo:
+    container_name: mongo
+    restart: always
+    image: mongo
     volumes:
-      - /data/fluent/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - /data/mongo/data/db:/data/db
+    networks:
+      - rabbit
+      - eve
 
   redis:
     container_name: redis
@@ -323,4 +347,5 @@ networks:
   publish:
   backend:
   monitor:
+  rabbit:
   eve:
