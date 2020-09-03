@@ -16,11 +16,11 @@ spec:
         - resources:
             limits:
               cpu: 100m
-              ephemeral-storage: 100M
+              ephemeral-storage: 200M
               memory: 100M
             requests:
               cpu: 100m
-              ephemeral-storage: 100M
+              ephemeral-storage: 200M
               memory: 100M
           terminationMessagePath: /dev/termination-log
           name: client
@@ -48,7 +48,7 @@ spec:
             periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
-          image: registry.gitlab.com/toofun-group/kaseb-web-client
+          image: registry.gitlab.com/toofun-group/kaseb-web-client:0.0.1
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst

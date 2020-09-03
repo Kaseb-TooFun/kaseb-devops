@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: v1
+metadata:
+  name: tracking-server-route
+spec:
+  host: track.kaseb.xyz
+  to:
+    kind: Service
+    name: tracking-server-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http

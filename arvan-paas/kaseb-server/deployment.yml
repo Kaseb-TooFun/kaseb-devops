@@ -34,26 +34,34 @@ spec:
                 secretKeyRef:
                   key: SPRING_DATASOURCE_PASSWORD
                   name: pg-secret
+            - name: SERVICES_INFRASTRUCTURE_HARNESS_BASE_URL
+              value: http://harness-svc
           ports:
             - containerPort: 1212
               protocol: TCP
           readinessProbe:
             httpGet:
-              path: /api/v1/verify
+              path: /monitoring/health
               port: 1212
+              httpHeaders:
+                - name: Authorization
+                  value: Basic a2FzZWI6SFc5Wjk1NHNlZkt4cFdERHRjeEVhWkYyTUV0UUFjY0JXMlNiNEI0bmcyMkpUaERVczlyU0RjY3lSWFAz
             initialDelaySeconds: 60
             periodSeconds: 5
             successThreshold: 1
           livenessProbe:
             httpGet:
-              path: /api/v1/verify
+              path: /monitoring/health
               port: 1212
+              httpHeaders:
+                - name: Authorization
+                  value: Basic a2FzZWI6SFc5Wjk1NHNlZkt4cFdERHRjeEVhWkYyTUV0UUFjY0JXMlNiNEI0bmcyMkpUaERVczlyU0RjY3lSWFAz
             initialDelaySeconds: 120
             failureThreshold: 1
             periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
-          image: registry.gitlab.com/toofun-group/kaseb-server
+          image: registry.gitlab.com/toofun-group/kaseb-server:0.0.1
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst

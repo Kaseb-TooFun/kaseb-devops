@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: tracking-server-svc
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 1313
+  selector:
+    app: tracking-server
+  type: ClusterIP

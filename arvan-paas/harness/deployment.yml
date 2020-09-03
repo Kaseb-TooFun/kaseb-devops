@@ -1,0 +1,84 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: harness
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: harness
+  template:
+    metadata:
+      labels:
+        app: harness
+    spec:
+      containers:
+        - name: harness
+          resources:
+            limits:
+              cpu: 200m
+              ephemeral-storage: 100M
+              memory: 1.5G
+            requests:
+              cpu: 200m
+              ephemeral-storage: 100M
+              memory: 1.5G
+          terminationMessagePath: /dev/termination-log
+          env:
+            - name: HARNESS_URI
+              value: http://0.0.0.0:9090
+            - name: ELASTICSEARCH_URI
+              value: http://proxyelasticsearch:9200
+            - name: MONGO_URI
+              valueFrom:
+                  secretKeyRef:
+                    key: MONGO_URI
+                    name: mongo-uri
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: actionml/harness:develop
+
+        - name: proxyelasticsearch
+          resources:
+            limits:
+              cpu: 100m
+              ephemeral-storage: 100M
+              memory: 50M
+            requests:
+              cpu: 100m
+              ephemeral-storage: 100M
+              memory: 50M
+          terminationMessagePath: /dev/termination-log
+          env:
+            - name: TARGET_ADDRESS
+              valueFrom:
+                  secretKeyRef:
+                    key: TARGET_ADDRESS
+                    name: elastic-uri
+          ports:
+            - containerPort: 9200
+              protocol: TCP
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: amirabbas/simple-reverse-proxy
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: private-reg
+      securityContext: {}
+      schedulerName: default-scheduler
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - "proxyelasticsearch"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 1
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
