@@ -48,7 +48,7 @@ spec:
             periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
-          image: registry.gitlab.com/toofun-group/kaseb-web-client:0.0.1
+          image: registry.gitlab.com/toofun-group/kaseb-web-client:0.0.3
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst

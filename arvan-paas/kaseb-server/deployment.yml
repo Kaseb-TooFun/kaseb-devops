@@ -57,7 +57,7 @@ spec:
                 - name: Authorization
                   value: Basic a2FzZWI6SFc5Wjk1NHNlZkt4cFdERHRjeEVhWkYyTUV0UUFjY0JXMlNiNEI0bmcyMkpUaERVczlyU0RjY3lSWFAz
             initialDelaySeconds: 120
-            failureThreshold: 1
+            failureThreshold: 3
             periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
