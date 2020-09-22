@@ -26,7 +26,7 @@ spec:
           name: wordpress
           env:
             - name: WORDPRESS_DB_HOST
-              value: wordpress-mysql-svc
+              value: 37.152.187.66
             - name: WORDPRESS_DB_USER
               value: root
             - name: WORDPRESS_DB_PASSWORD
