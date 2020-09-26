@@ -16,11 +16,11 @@ spec:
         - resources:
             limits:
               cpu: 1000m
-              ephemeral-storage: 100M
+              ephemeral-storage: 200M
               memory: 1G
             requests:
               cpu: 1000m
-              ephemeral-storage: 100M
+              ephemeral-storage: 200M
               memory: 1G
           terminationMessagePath: /dev/termination-log
           name: server
@@ -57,7 +57,7 @@ spec:
                 - name: Authorization
                   value: Basic a2FzZWI6SFc5Wjk1NHNlZkt4cFdERHRjeEVhWkYyTUV0UUFjY0JXMlNiNEI0bmcyMkpUaERVczlyU0RjY3lSWFAz
             initialDelaySeconds: 120
-            failureThreshold: 3
+            failureThreshold: 4
             periodSeconds: 10
           imagePullPolicy: Always
           terminationMessagePolicy: File
