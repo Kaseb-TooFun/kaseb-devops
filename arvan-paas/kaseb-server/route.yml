@@ -13,3 +13,20 @@ spec:
     insecureEdgeTerminationPolicy: Allow
   port:
     targetPort: http
+
+---
+kind: Route
+apiVersion: v1
+metadata:
+  name: server-prom-route
+spec:
+  host: api-kaseb.apps.ir-thr-at1.arvan.run
+  to:
+    kind: Service
+    name: server-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http
