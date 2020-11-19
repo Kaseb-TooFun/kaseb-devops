@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - image: grafana/grafana:latest
+          name: grafana
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_RENDERING_SERVER_URL
+              value: http://localhost:8081/render
+            - name: GF_RENDERING_CALLBACK_URL
+              value: http://localhost:3000/
+          volumeMounts:
+            - name: grafana-vol
+              mountPath: /var/lib/grafana
+          resources:
+            limits:
+              cpu: 200m
+              ephemeral-storage: 200M
+              memory: 200M
+            requests:
+              cpu: 200m
+              ephemeral-storage: 200M
+              memory: 200M
+        - image: grafana/grafana-image-renderer:latest
+          name: grafana-renderer
+          resources:
+            limits:
+              cpu: 200m
+              ephemeral-storage: 200M
+              memory: 200M
+            requests:
+              cpu: 200m
+              ephemeral-storage: 200M
+              memory: 200M
+      volumes:
+        - name: grafana-vol
+          persistentVolumeClaim:
+            claimName: grafana-vol
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler

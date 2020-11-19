@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: v1
+metadata:
+  name: dev-client-route
+spec:
+  host: app.mykaseb.ir
+  to:
+    kind: Service
+    name: dev-client-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http

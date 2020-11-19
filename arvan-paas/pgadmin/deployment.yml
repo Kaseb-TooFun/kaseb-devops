@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: pgadmin
+  name: pgadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+    spec:
+      containers:
+        - image: dpage/pgadmin4
+          name: pgadmin
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: admin@kaseb.xyz
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: jdwi@42jxo
+          volumeMounts:
+            - name: pgadmin-vol
+              mountPath: /var/lib/pgadmin
+          resources:
+            limits:
+              cpu: 400m
+              ephemeral-storage: 200M
+              memory: 400M
+            requests:
+              cpu: 400m
+              ephemeral-storage: 200M
+              memory: 400M
+      volumes:
+        - name: pgadmin-vol
+          persistentVolumeClaim:
+            claimName: pgadmin-vol
+      securityContext:
+        # runAsNonRoot: false
+        runAsUser: 0
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+

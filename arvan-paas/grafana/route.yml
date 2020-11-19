@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: v1
+metadata:
+  name: grafana-route
+spec:
+  host: monitor.kaseb.xyz
+  to:
+    kind: Service
+    name: grafana-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http

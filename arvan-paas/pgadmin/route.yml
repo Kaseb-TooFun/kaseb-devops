@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: v1
+metadata:
+  name: pgadmin-route
+spec:
+  host: admin.kaseb.xyz
+  to:
+    kind: Service
+    name: pgadmin-svc
+    weight: 100
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Allow
+  port:
+    targetPort: http
