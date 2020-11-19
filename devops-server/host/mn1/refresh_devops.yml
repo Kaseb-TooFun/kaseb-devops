@@ -18,8 +18,8 @@
 
     - name: copy nginx config to server
       copy:
-        src: nginx/default
-        dest: /data/nginx/nginx/site-confs/
+        src: nginx/default.conf
+        dest: /data/nginx/nginx/site-confs/default
       tags:
         - nginx
 

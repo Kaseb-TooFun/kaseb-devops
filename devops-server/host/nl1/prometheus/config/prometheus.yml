@@ -1,39 +1,19 @@
-# my global config
 global:
-  scrape_interval: 15s # By default, scrape targets every 15 seconds.
-  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
-  # scrape_timeout is set to the global default (10s).
-
-  # Attach these labels to any time series or alerts when communicating with
-  # external systems (federation, remote storage, Alertmanager).
+  scrape_interval: 15s
+  evaluation_interval: 15s
   external_labels:
     monitor: "my-project"
 
-# Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
   - "alert.rules"
-  # - "first.rules"
-  # - "second.rules"
 
-# alert
-alerting:
-  alertmanagers:
-    - scheme: http
-      static_configs:
-        - targets:
-            - "alertmanager:9093"
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-
   - job_name: "prometheus"
     scrape_interval: 10s
     static_configs:
       - targets: ["localhost:9090"]
 
-  - job_name: "dev-server"
+  - job_name: "api-server"
     metrics_path: "/monitoring/prometheus"
     scrape_interval: 10s
     basic_auth:
@@ -42,18 +22,9 @@ scrape_configs:
     static_configs:
       - targets:
           - "server:1212"
-
-  - job_name: "prod-server"
-    metrics_path: "/monitoring/prometheus"
-    scrape_interval: 10s
-    basic_auth:
-      username: kaseb
-      password_file: password
-    static_configs:
-      - targets:
           - "api-kaseb.apps.ir-thr-at1.arvan.run"
 
-  - job_name: "dev-tracking-server"
+  - job_name: "tracking-server"
     metrics_path: "/monitoring/prometheus"
     scrape_interval: 10s
     basic_auth:
@@ -62,44 +33,20 @@ scrape_configs:
     static_configs:
       - targets:
           - "tracking-server:1313"
-
-  - job_name: "prod-tracking-server"
-    metrics_path: "/monitoring/prometheus"
-    scrape_interval: 10s
-    basic_auth:
-      username: kaseb
-      password_file: password
-    static_configs:
-      - targets:
           - "track-kaseb.apps.ir-thr-at1.arvan.run"
 
   - job_name: "nodeexporter"
     scrape_interval: 10s
+    basic_auth:
+      username: kaseb
+      password_file: password-prod
     static_configs:
-      - targets: ["nodeexporter:9100"]
+      - targets: ["nodeexporter:9100", "node.kaseb.xyz"]
 
   - job_name: "cadvisor"
     scrape_interval: 10s
-    static_configs:
-      - targets: ["cadvisor:8080"]
-
-  - job_name: "prod-nodeexporter"
-    scrape_interval: 10s
     basic_auth:
       username: kaseb
       password_file: password-prod
     static_configs:
-      - targets: ["node.kaseb.xyz"]
-
-  - job_name: "prod-cadvisor"
-    scrape_interval: 10s
-    basic_auth:
-      username: kaseb
-      password_file: password-prod
-    static_configs:
-      - targets: ["cadvisor.kaseb.xyz"]
-  # - job_name: "pushgateway"
-  #   scrape_interval: 10s
-  #   honor_labels: true
-  #   static_configs:
-  #     - targets: ["pushgateway:9091"]
+      - targets: ["cadvisor:8080", "cadvisor.kaseb.xyz"]

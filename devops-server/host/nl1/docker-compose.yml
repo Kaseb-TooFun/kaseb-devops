@@ -3,8 +3,6 @@ services:
   gitlab-runner:
     image: gitlab/gitlab-runner:latest
     container_name: gitlab-runner
-    # ports:
-    #   - 8093:8093
     volumes:
       - /data/gitlab-runner/config:/etc/gitlab-runner
       - /var/run/docker.sock:/var/run/docker.sock
@@ -25,54 +23,14 @@ services:
     image: postgres:12.3
     restart: unless-stopped
     container_name: db
-    #  ports:
-    #    - 5432:5432
+    ports:
+      - 5436:5432
     env_file:
       - secret-env
     volumes:
       - /data/db:/var/lib/postgresql/data
     networks:
       - backend
-      - eve
-
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    restart: unless-stopped
-    #  ports:
-    #    - 5431:80
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@kaseb.com
-    volumes:
-      - /data/pgadmin:/var/lib/pgadmin
-    env_file:
-      - secret-env
-    networks:
-      - backend
-      - publish
-    depends_on:
-      - db
-
-  pgbackups3:
-    image: amirabbas/postgres-backup-s3
-    container_name: pgbackups3
-    environment:
-      - SCHEDULE=@weekly
-      - S3_ENDPOINT=https://s3.ir-thr-at1.arvanstorage.com
-      - S3_BUCKET=pg-dev-backup
-      - S3_PREFIX=backup
-      - POSTGRES_HOST=db
-      - POSTGRES_DATABASE=kaseb
-      - POSTGRES_USER=admin
-      - POSTGRES_EXTRA_OPTS=--schema=public --blobs
-    env_file:
-      - secret-env
-    networks:
-      - backend
-    depends_on:
-      - db
-    labels:
-      dozzle: "show logs"
 
   nginx:
     image: linuxserver/letsencrypt
@@ -84,10 +42,9 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=pgadmin,api,monitor,app,log,adminer,harness,prom,track
+      - SUBDOMAINS=api,app,log,adminer,harness,prom,track
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
-      - EXTRA_DOMAINS=api.hava.dev
     volumes:
       - /data/nginx:/config
     ports:
@@ -102,10 +59,7 @@ services:
       timeout: 10s
       retries: 3
     depends_on:
-      - pgadmin
       - server
-      - grafana
-      - client
       - prometheus
       - tracking-server
       - harness
@@ -158,26 +112,9 @@ services:
     labels:
       dozzle: "show logs"
 
-  client:
-    image: registry.gitlab.com/toofun-group/kaseb-web-client
-    container_name: client
-    environment:
-      - PUBLIC_URL=https://app.mykaseb.ir
-      - BASE_URL=https://api.mykaseb.ir
-    env_file:
-      - secret-env
-    # ports:
-    #   - 8080:80
-    networks:
-      - publish
-    labels:
-      dozzle: "show logs"
-
   rabbitmq:
     image: rabbitmq:management
     container_name: rabbitmq
-    # ports:
-    #   - "5672:5672"
     environment:
       - RABBITMQ_DEFAULT_USER=kaseb
       - RABBITMQ_DEFAULT_PASS=pass
@@ -188,8 +125,6 @@ services:
     image: prom/prometheus:v2.19.2
     container_name: prometheus
     user: "1000:1000"
-    # ports:
-    #   - 9090:9090
     volumes:
       - /data/prometheus/config:/etc/prometheus/
       - /data/prometheus/data:/prometheus
@@ -198,28 +133,12 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
-    links:
-      - cadvisor:cadvisor
-      - alertmanager:alertmanager
     depends_on:
       - cadvisor
     networks:
       - monitor
       - backend
       - publish
-
-  alertmanager:
-    image: prom/alertmanager
-    container_name: alertmanager
-    # ports:
-    #   - 9093:9093
-    volumes:
-      - /data/alertmanager/:/etc/alertmanager/
-    command:
-      - "--config.file=/etc/alertmanager/config.yml"
-      - "--storage.path=/alertmanager"
-    networks:
-      - monitor
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.37.0
@@ -231,31 +150,6 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /cgroup:/cgroup:ro
     restart: unless-stopped
-    networks:
-      - monitor
-
-  grafana:
-    image: grafana/grafana:7.0.6
-    container_name: grafana
-    user: "1000:1000"
-    volumes:
-      - /data/grafana/data:/var/lib/grafana
-      - /data/grafana/provisioning:/etc/grafana/provisioning
-    environment:
-      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_RENDERING_SERVER_URL=http://grafana-renderer:8081/render
-      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
-    env_file:
-      - secret-env
-    networks:
-      - monitor
-      - backend
-      - publish
-
-  grafana-renderer:
-    image: grafana/grafana-image-renderer:latest
-    container_name: grafana-renderer
     networks:
       - monitor
 
@@ -294,26 +188,14 @@ services:
     networks:
       - publish
 
-  proxyelasticsearch:
-    container_name: proxyelasticsearch
-    restart: always
-    image: amirabbas/simple-reverse-proxy
-    env_file:
-      - secret-env
-    networks:
-      - rabbit
-
   harness:
     container_name: harness
     restart: always
     image: actionml/harness:develop
-    # ports:
-    #   - 9090:9090
-    # - 4040:4040
     environment:
       - HARNESS_URI=http://0.0.0.0:9090
       - ELASTICSEARCH_URI=http://proxyelasticsearch:9200
-      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_URI=mongodb://root:aqsd56klsddfh3@mongo:27017
     depends_on:
       - mongo
     networks:
@@ -324,28 +206,28 @@ services:
 
   mongo:
     container_name: mongo
+    ports:
+      - 27017:27017
     restart: always
     image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=aqsd56klsddfh3
     volumes:
       - /data/mongo/data/db:/data/db
     networks:
       - rabbit
-      - eve
 
-  redis:
-    container_name: redis
-    image: redis
-    restart: unless-stopped
-    command: redis-server --requirepass pass
-    # ports:
-    #   - 6379:6379
-    networks:
-      - eve
-
+  telegram:
+    container_name: telegram
+    image: telegrammessenger/proxy:latest
+    ports:
+      - 1212:443
+    volumes:
+      - /data/telegram:/data
 
 networks:
   publish:
   backend:
   monitor:
   rabbit:
-  eve:

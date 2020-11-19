@@ -12,7 +12,7 @@ services:
       - VALIDATION=http
       - URL=kaseb.xyz
       - ONLY_SUBDOMAINS=true
-      - SUBDOMAINS=kibana,cadvisor,node
+      - SUBDOMAINS=kibana,cadvisor,node,admin
     volumes:
       - /data/nginx:/config
     ports:
@@ -28,6 +28,7 @@ services:
       retries: 3
     depends_on:
       - kibana
+      - pgadmin
 
   postgres:
     image: postgres:12.3
@@ -64,6 +65,18 @@ services:
       - postgres
     logging:
       driver: fluentd
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    volumes:
+      - /data/pgadmin:/var/lib/pgadmin
+    networks:
+      - postgres
+      - publish
+    depends_on:
+      - postgres
 
   mysql:
     image: mysql:5.7
