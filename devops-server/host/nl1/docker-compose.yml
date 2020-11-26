@@ -8,17 +8,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
 
-  # squid:
-  #   image: sameersbn/squid:3.5.27-2
-  #   container_name: squid
-  #   ports:
-  #     - 8228:3128
-  #   volumes:
-  #     - /data/squid:/var/spool/squid
-  #     - /data/squid/conf:/etc/squid/squid.conf:ro
-  #     - /data/squid/squid_users:/etc/squid/squid_users:ro
-  #   restart: always
-
   db:
     image: postgres:12.3
     restart: unless-stopped
@@ -42,7 +31,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=api,app,log,adminer,harness,prom,track
+      - SUBDOMAINS=api,log,harness,prom,track
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -167,6 +156,7 @@ services:
       - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       - monitor
+
   dozzle:
     container_name: dozzle
     image: amir20/dozzle:latest
@@ -176,15 +166,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - DOZZLE_FILTER=label=dozzle
-    networks:
-      - publish
-
-  adminer:
-    container_name: adminer
-    image: adminer
-    restart: always
-    # ports:
-    #   - 8080:8080
     networks:
       - publish
 
@@ -217,14 +198,6 @@ services:
       - /data/mongo/data/db:/data/db
     networks:
       - rabbit
-
-  telegram:
-    container_name: telegram
-    image: telegrammessenger/proxy:latest
-    ports:
-      - 1212:443
-    volumes:
-      - /data/telegram:/data
 
 networks:
   publish:
