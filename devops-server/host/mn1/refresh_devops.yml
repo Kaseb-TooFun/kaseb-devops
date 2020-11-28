@@ -41,6 +41,7 @@
       docker_compose:
         project_src: /
         pull: no
+        remove_orphans: yes
       tags:
         - compose
         - up
