@@ -31,7 +31,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
       - URL=mykaseb.ir
-      - SUBDOMAINS=api,log,harness,prom,track
+      - SUBDOMAINS=api,log,harness,track
       - ONLY_SUBDOMAINS=true
       - VALIDATION=http
     volumes:
@@ -49,7 +49,6 @@ services:
       retries: 3
     depends_on:
       - server
-      - prometheus
       - tracking-server
       - harness
 
@@ -109,53 +108,6 @@ services:
       - RABBITMQ_DEFAULT_PASS=pass
     networks:
       - rabbit
-
-  prometheus:
-    image: prom/prometheus:v2.19.2
-    container_name: prometheus
-    user: "1000:1000"
-    volumes:
-      - /data/prometheus/config:/etc/prometheus/
-      - /data/prometheus/data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-      - "--web.console.templates=/usr/share/prometheus/consoles"
-    depends_on:
-      - cadvisor
-    networks:
-      - monitor
-      - backend
-      - publish
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.37.0
-    container_name: cadvisor
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /cgroup:/cgroup:ro
-    restart: unless-stopped
-    networks:
-      - monitor
-
-  nodeexporter:
-    image: prom/node-exporter:v1.0.1
-    container_name: nodeexporter
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - "--path.procfs=/host/proc"
-      - "--path.rootfs=/rootfs"
-      - "--path.sysfs=/host/sys"
-      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
-    networks:
-      - monitor
 
   dozzle:
     container_name: dozzle
